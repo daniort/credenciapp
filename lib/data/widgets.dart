@@ -25,6 +25,23 @@ Future<Directory> crearDirectorio(String text) async {
   return nuevoDir;
 }
 
+Future<Directory> getDirectorio(String text) async {
+  Directory dir = await getExternalStorageDirectory();
+  print(dir.path);
+  print('===');
+  String _nPath = "";
+  List<String> paths = dir.path.split("/");
+  for (int x = 1; x < paths.length; x++) {
+    String folder = paths[x];
+    if (folder != "Android")
+      _nPath += "/" + folder;
+    else
+      break;
+  }
+  _nPath = _nPath + "/RegistrosAPP/$text";
+  return Directory(_nPath);
+}
+
 snack(String label, Color col, GlobalKey<ScaffoldState> key) {
   return key.currentState.showSnackBar(SnackBar(
     content: Text(label),

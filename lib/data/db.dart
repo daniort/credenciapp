@@ -21,6 +21,9 @@ class DataBase {
   Box get mybox => this._boxData;
 
   dynamic getDataUser(String index) => this._boxData.get(index);
+  void saveDataUser(dynamic data, String index) {
+    this._boxData.put(index, data);
+  }
 
   Future<void> initDataBase() async {
     Directory _document = await getTemporaryDirectory();

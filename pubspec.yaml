@@ -36,6 +36,7 @@ dependencies:
   permission_handler: ^5.1.0
   font_awesome_flutter: ^8.8.1
   provider: ^4.3.3
+  xfile: ^1.1.0
 
   # flutter_colorpicker: ^0.3.5
   # camera_camera: ^1.0.34+1

@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_listener/hive_listener.dart';
-import 'package:logs/data/db.dart';
+import 'package:logs/data/search.dart';
+import 'package:logs/data/widgets.dart';
+import 'package:logs/providers/appstate.dart';
+import 'package:provider/provider.dart';
 
 class HistorialPage extends StatefulWidget {
   @override
@@ -9,10 +15,11 @@ class HistorialPage extends StatefulWidget {
 }
 
 class _HistorialPageState extends State<HistorialPage> {
-  final db = new DataBase();
   Size size;
+  AppState state;
   @override
   Widget build(BuildContext context) {
+    this.state = Provider.of<AppState>(context, listen: true);
     this.size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
@@ -20,7 +27,9 @@ class _HistorialPageState extends State<HistorialPage> {
         actions: [
           IconButton(
             icon: Icon(Icons.search),
-            onPressed: () {},
+            onPressed: () {
+              showSearch(context: context, delegate: ArticleSearch());
+            },
           ),
         ],
       ),
@@ -36,33 +45,60 @@ class _HistorialPageState extends State<HistorialPage> {
                 ),
               );
             }
+
             return Column(
               children: [
                 Expanded(
-                  child: ListView(
-                    children: [
-                      for (var a in numeros)
-                        Container(
-                          margin:
-                              EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          color: Colors.grey[200],
-                          child: ExpansionTile(
-                            title: Text(a ?? ''),
-                            leading:
-                                Icon(Icons.remove_red_eye, color: Colors.grey),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                this.db.eliminarNuevoNumero(a);
-                              },
+                  child: ListView.builder(
+                    itemCount: numeros.length,
+                    itemBuilder: (_, i) {
+                      return Container(
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        color: Colors.grey[200],
+                        child: ExpansionTile(
+                          title: Text(numeros[i] ?? ''),
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                getFoto(numeros[i]),
+                                SizedBox(width: 20),
+                                getFirma(numeros[i]),
+                              ],
                             ),
-                            // children: [
-                            //   Text('su foto'),
-                            //   Text('su firma'),
-                            // ],
-                          ),
-                        )
-                    ],
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                InkWell(
+                                  onTap: () {
+                                    this.state.deleteAlumno(numeros[i]);
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.symmetric(vertical: 5),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 10),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete,
+                                            color: Colors.red[300]),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          'Eliminar',
+                                          style: TextStyle(
+                                            color: Colors.red[300],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
                 Container(
@@ -79,38 +115,58 @@ class _HistorialPageState extends State<HistorialPage> {
           }),
     );
   }
-}
 
-//  Column(
-//         children: [
-//           Expanded(
-//             child: ListView(
-//               children: [
-//                 for (int a in [1, 2, 3])
-//                   Container(
-//                     margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-//                     color: Colors.grey[200],
-//                     child: ExpansionTile(
-//                       title: Text('14620181'),
-//                       leading: Icon(Icons.remove_red_eye, color: Colors.grey),
-//                       trailing: Icon(Icons.delete, color: Colors.red),
-//                       children: [
-//                         Text('su foto'),
-//                         Text('su firma'),
-//                       ],
-//                     ),
-//                   )
-//               ],
-//             ),
-//           ),
-//           Container(
-//             width: this.size.width,
-//             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-//             color: Colors.grey[300],
-//             child: Text(
-//               '513 Registros totales',
-//               textAlign: TextAlign.right,
-//             ),
-//           ),
-//         ],
-//       ),
+  Widget getFoto(String a) {
+    return FutureBuilder(
+      future: getDirectorio(a),
+      builder: (_, AsyncSnapshot<Directory> snap) {
+        switch (snap.connectionState) {
+          case ConnectionState.waiting:
+            return spinner();
+          case ConnectionState.done:
+            try {
+              return Image.file(
+                File(snap.data.path + '/foto_$a.jpg'),
+                width: this.size.width * 0.25,
+              );
+            } catch (e) {
+              print(e);
+              return Text('No encontramos las fotos');
+            }
+            break;
+          default:
+            return Text('No encontramos las fotos');
+        }
+      },
+    );
+  }
+
+  Widget getFirma(String a) {
+    return FutureBuilder(
+      future: getDirectorio(a),
+      builder: (_, AsyncSnapshot<Directory> snap) {
+        switch (snap.connectionState) {
+          case ConnectionState.waiting:
+            return spinner();
+          case ConnectionState.done:
+            try {
+              return Container(
+                padding: EdgeInsets.symmetric(vertical: 20),
+                color: Colors.white,
+                child: Image.file(
+                  File(snap.data.path + '/firma_$a.png'),
+                  width: this.size.width * 0.25,
+                ),
+              );
+            } catch (e) {
+              print(e);
+              return Text('No encontramos las fotos');
+            }
+            break;
+          default:
+            return Text('No encontramos las fotos');
+        }
+      },
+    );
+  }
+}
