@@ -65,7 +65,11 @@ Center spinner() {
 }
 
 Future<bool> pidePermiso(Permission permiso) async {
-  if (await permiso.isGranted) {
+  print(permiso);
+  bool autori = await permiso.isGranted;
+  print(autori);
+
+  if (autori) {
     return true;
   } else {
     var result = await permiso.request();

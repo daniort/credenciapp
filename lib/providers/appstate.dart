@@ -17,8 +17,10 @@ class AppState with ChangeNotifier {
 
   void appState() async {
     this._db.initDataBase();
-    await pidePermiso(Permission.camera);
-    await pidePermiso(Permission.storage);
+    // await pidePermiso(Permission.camera);
+    // await pidePermiso(Permission.storage);
+    Permission.camera.request().isGranted;
+    Permission.storage.request().isGranted;
   }
 
   Future<bool> saveNewAlumno(
@@ -37,9 +39,14 @@ class AppState with ChangeNotifier {
         List<String> numeros = this._db.getDataUser('numeros') ?? [];
         numeros.add(text);
         this._db.saveDataUser(numeros, 'numeros');
+      } else {
+        print(await pidePermiso(Permission.storage));
+        print('NO NOS DIERON PERMISO :(');
       }
       return true;
     } catch (e) {
+      print('ERROR  EN SAVE NEW ALUMNO ');
+      print(e);
       return false;
     }
   }
@@ -54,6 +61,8 @@ class AppState with ChangeNotifier {
       Directory dir = await getDirectorio(text);
       dir.delete(recursive: true);
     } catch (e) {
+      print('ERROR  EN DELETE ALUMNO ');
+      print(e);
       print(e);
     }
   }

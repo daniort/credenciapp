@@ -103,7 +103,7 @@ class _HistorialPageState extends State<HistorialPage> {
                 ),
                 Container(
                   width: this.size.width,
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                   color: Colors.grey[300],
                   child: Text(
                     '${numeros.length} Registros totales',

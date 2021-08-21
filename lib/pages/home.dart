@@ -39,14 +39,19 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     this.painterController.thickness = 3.0;
     this.painterController.backgroundColor = Colors.transparent;
-
-    this.cameraControllerTrasera =
-        CameraController(cameras[1], ResolutionPreset.low, enableAudio: false);
-
-    cameraControllerTrasera.initialize().then((_) {
-      if (!mounted) return;
-      setState(() {});
-    });
+    //INICIAMOS CON CAMARA FRONTAL
+    try {
+      this.cameraControllerTrasera = CameraController(
+          cameras[1], ResolutionPreset.medium,
+          enableAudio: false);
+      cameraControllerTrasera.initialize().then((_) {
+        if (!mounted) return;
+        setState(() {});
+      });
+    } catch (e) {
+      print('no se puedo inicializar la camara');
+      print(e);
+    }
   }
 
   @override
@@ -74,9 +79,7 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // this.painterController.isEmpty ? btnGuardarFirma() :
           btnBorrarFirma(),
-          // this.mifoto == null ? btnTomarFoto() :
           btnBorrarFoto(),
           btnCambiarCamara(),
           btnHistorial(),
@@ -99,18 +102,15 @@ class _HomePageState extends State<HomePage> {
     return bott > 0
         ? SizedBox()
         : Expanded(
-            child: Container(
-              width: this.size.width,
+            child: Center(
               child: (this.mifoto != null)
                   ? Container(
                       margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: Center(child: getImageCache()
-                          // Image.memory(await this.mifoto.readAsBytes() ,
-                          //     errorBuilder: (_, obj, stac) => Text('error'),
-                          //     fit: BoxFit.fitWidth),
-                          ),
+                      child: Center(child: getImageCache()),
                     )
                   : Container(
+                      width: this.size.width * 0.6,
+                      color: Colors.grey[200],
                       margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       child: !cameraControllerTrasera.value.isInitialized
                           ? spinner()
@@ -126,14 +126,17 @@ class _HomePageState extends State<HomePage> {
     if (this.mifoto == null) {
       return InkWell(
         onTap: () async {
-          if (cameraControllerTrasera.value.isInitialized &&
-              this.mifoto == null) {
-            this.cargando = true;
-            setState(() {});
-            this.mifoto = await cameraControllerTrasera.takePicture();
-
-            this.cargando = false;
-            setState(() {});
+          try {
+            print(this.cargando);
+            if (cameraControllerTrasera.value.isInitialized &&
+                this.mifoto == null) {
+              this.mifoto = await cameraControllerTrasera.takePicture();
+              setState(() {});
+              print('jamas llega aqui2');
+            }
+          } catch (e) {
+            print('ERROR TOMANDO LA FOTO');
+            print(e);
           }
         },
         child: Container(
@@ -141,18 +144,20 @@ class _HomePageState extends State<HomePage> {
           margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           padding: EdgeInsets.symmetric(vertical: 15),
           color: primary,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.camera_alt, color: Colors.white),
-              SizedBox(width: 10),
-              Text(
-                'Tomar foto',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+          child: this.cargando
+              ? spinner()
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.camera_alt, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text(
+                      'Tomar foto',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
         ),
       );
     }
@@ -167,25 +172,27 @@ class _HomePageState extends State<HomePage> {
           margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           padding: EdgeInsets.symmetric(vertical: 15),
           color: primary,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.edit, color: Colors.white),
-              SizedBox(width: 10),
-              Text(
-                'Guardar firma',
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+          child: this.cargando
+              ? spinner()
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.edit, color: Colors.white),
+                    SizedBox(width: 10),
+                    Text(
+                      'Guardar firma',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
         ),
       );
     }
     if (this.mifoto != null && !this.painterController.isEmpty)
       return InkWell(
         onTap: () async {
-          if (this.mifoto != null && this.firma) {
+          if (this.mifoto != null && !this.painterController.isEmpty) {
             return showDialog(
               context: context,
               builder: (context) => dialogNumControl(),
@@ -197,18 +204,20 @@ class _HomePageState extends State<HomePage> {
             margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             padding: EdgeInsets.symmetric(vertical: 15),
             color: Colors.blue,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icon(Icons.camera_alt, color: Colors.white),
-                // SizedBox(width: 10),
-                Text(
-                  'Continuar',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ],
-            )),
+            child: this.cargando
+                ? spinner()
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Icon(Icons.camera_alt, color: Colors.white),
+                      // SizedBox(width: 10),
+                      Text(
+                        'Continuar',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  )),
       );
   }
 
@@ -220,7 +229,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {});
       },
       child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
           decoration: BoxDecoration(
             boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 0.5)],
             gradient: LinearGradient(
@@ -233,7 +242,8 @@ class _HomePageState extends State<HomePage> {
             children: [
               Icon(FontAwesomeIcons.eraser, color: Colors.red),
               SizedBox(width: 5),
-              Text('Firma'),
+              Text('Firma')
+              // Flexible(child: Text('Firma', overflow: TextOverflow.clip)),
             ],
           )),
     );
@@ -297,29 +307,58 @@ class _HomePageState extends State<HomePage> {
   }
 
   void voltearCamara() {
+    this.mifoto = null;
     try {
       if (cameraControllerTrasera.description.name == '0') {
+        // PONEMOS LA CAMARA FRONTA
         CameraController _camera = CameraController(
             cameras[1], ResolutionPreset.low,
             enableAudio: false);
         this.cameraControllerTrasera = _camera;
         // _camera.dispose();
       } else {
+        // PONEMOS LA CAMARA TRASERA
+        print('camera  TRASERA =  = = =  == = = = = =  ========0');
         CameraController _camera = CameraController(
-            cameras[0], ResolutionPreset.low,
-            enableAudio: false);
+          cameras[0],
+          ResolutionPreset.low,
+          enableAudio: false,
+        );
         this.cameraControllerTrasera = _camera;
-        // _camera.dispose();
+        print('flash mode;..-.--.-.-.-.--.-.--.-.');
+        if (this.cameraControllerTrasera.value.flashMode != FlashMode.off) {
+          try {
+            print('PROBEMOS APAGAR EL FLASH');
+            print(this.cameraControllerTrasera.value.flashMode);
+            setFlashMode(FlashMode.off).then((_) {
+              if (mounted) setState(() {});
+            });
+          } catch (e) {
+            print('error');
+            print(e);
+          }
+        }
       }
 
       cameraControllerTrasera.initialize().then((_) {
         if (!mounted) return;
+
         setState(() {});
       });
 
       setState(() {});
     } catch (e) {
       print('ERRORR AL CAMBIAR LA CAMARA?');
+      print(e);
+    }
+  }
+
+  Future<void> setFlashMode(FlashMode mode) async {
+    if (this.cameraControllerTrasera == null) return;
+    try {
+      await this.cameraControllerTrasera.setFlashMode(mode);
+    } on CameraException catch (e) {
+      print('ERROR EN EL SET FLAS MODE:::');
       print(e);
     }
   }
@@ -355,7 +394,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {});
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 10),
         decoration: BoxDecoration(
           boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 0.5)],
           gradient: LinearGradient(
@@ -388,29 +427,37 @@ class _HomePageState extends State<HomePage> {
         ),
         MaterialButton(
           onPressed: () async {
-            if (keyForm.currentState.validate()) {
-              bool res = await this.state.saveNewAlumno(
-                  this.controllerNumber.text,
-                  this.painterController.finish(),
-                  this.mifoto);
-
-              if (res) {
-                this.mifoto = null;
-                resetPizarron();
-                this.keyForm.currentState.reset();
-                // snack('TODO GOOD', Colors.blue, keyScaff);
+            try {
+              if (keyForm.currentState.validate()) {
+                this.cargando = true;
                 setState(() {});
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HistorialPage(),
-                  ),
-                );
-              } else {
-                snack('Algo salió mal', Colors.red, keyScaff);
-                Navigator.pop(context);
+                bool res = await this.state.saveNewAlumno(
+                    this.controllerNumber.text,
+                    this.painterController.finish(),
+                    this.mifoto);
+                this.cargando = false;
+                setState(() {});
+                if (res) {
+                  this.mifoto = null;
+                  resetPizarron();
+                  this.keyForm.currentState.reset();
+                  // snack('TODO GOOD', Colors.blue, keyScaff);
+                  setState(() {});
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HistorialPage(),
+                    ),
+                  );
+                } else {
+                  snack('Algo salió mal', Colors.red, keyScaff);
+                  Navigator.pop(context);
+                }
               }
+            } catch (e) {
+              print('ERROR EN EL DIALOG');
+              print(e);
             }
           },
           color: Colors.blue,
@@ -428,42 +475,46 @@ class _HomePageState extends State<HomePage> {
           keyboardType: TextInputType.number,
           maxLength: 8,
           validator: (String val) {
-            if (val.length < 8 || val.length > 8) return 'Número invalido';
+            if (val.length < 8 || val.length > 8) return 'Número inválido.';
+            if (val.contains('.') ||
+                val.contains(',') ||
+                val.contains(' ') ||
+                val.contains('-'))
+              return 'Carácter inválido.\nIngresa solo números.';
           },
         ),
       ),
     );
   }
 
-  btnTomarFoto() {
-    return InkWell(
-      onTap: () async {
-        this.cargando = true;
-        setState(() {});
-        this.mifoto = await cameraControllerTrasera.takePicture();
-        this.cargando = false;
-        setState(() {});
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        decoration: BoxDecoration(
-          boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 0.5)],
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.grey[100], Colors.grey[300]],
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(FontAwesomeIcons.check, color: Colors.green),
-            SizedBox(width: 5),
-            Text('Foto'),
-          ],
-        ),
-      ),
-    );
-  }
+  // btnTomarFoto() {
+  //   return InkWell(
+  //     onTap: () async {
+  //       this.cargando = true;
+  //       setState(() {});
+  //       this.mifoto = await cameraControllerTrasera.takePicture();
+  //       this.cargando = false;
+  //       setState(() {});
+  //     },
+  //     child: Container(
+  //       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+  //       decoration: BoxDecoration(
+  //         boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 0.5)],
+  //         gradient: LinearGradient(
+  //           begin: Alignment.topCenter,
+  //           end: Alignment.bottomCenter,
+  //           colors: [Colors.grey[100], Colors.grey[300]],
+  //         ),
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           Icon(FontAwesomeIcons.check, color: Colors.green),
+  //           SizedBox(width: 5),
+  //           Text('Foto'),
+  //         ],
+  //       ),
+  //     ),
+  //   );
 
   void resetPizarron() {
     try {
