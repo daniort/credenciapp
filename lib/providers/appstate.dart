@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:logs/data/db.dart';
 import 'package:logs/data/widgets.dart';
@@ -24,7 +23,7 @@ class AppState with ChangeNotifier {
   }
 
   Future<bool> saveNewAlumno(
-      String text, PictureDetails firmaDetalle, XFile mifoto) async {
+      String text, PictureDetails firmaDetalle, var mifoto) async {
     try {
       if (await pidePermiso(Permission.storage)) {
         Directory dir = await crearDirectorio(text);

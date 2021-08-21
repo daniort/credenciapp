@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'dart:typed_data';
 
+// import 'package:camera_camera/page/camera.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:logs/data/cameras.dart';
 import 'package:logs/data/colors.dart';
@@ -11,7 +15,7 @@ import 'package:logs/providers/appstate.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:painter/painter.dart';
 import 'package:provider/provider.dart';
-import 'package:camera/camera.dart';
+// import 'package:camera/camera.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -23,7 +27,12 @@ class _HomePageState extends State<HomePage> {
   TextEditingController controllerNumber = TextEditingController();
   GlobalKey<FormState> keyForm = GlobalKey<FormState>();
   GlobalKey<ScaffoldState> keyScaff = GlobalKey<ScaffoldState>();
-  CameraController cameraControllerTrasera;
+  CameraController cameraControl;
+  CameraController _cameraFrontal =
+      CameraController(cameras[1], ResolutionPreset.low, enableAudio: false);
+  CameraController _cameraTrasera =
+      CameraController(cameras[0], ResolutionPreset.low, enableAudio: false);
+
   bool cargando = false;
   AppState state;
   Size size;
@@ -39,25 +48,18 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     this.painterController.thickness = 3.0;
     this.painterController.backgroundColor = Colors.transparent;
-    //INICIAMOS CON CAMARA FRONTAL
-    try {
-      this.cameraControllerTrasera = CameraController(
-          cameras[1], ResolutionPreset.medium,
-          enableAudio: false);
-      cameraControllerTrasera.initialize().then((_) {
-        if (!mounted) return;
-        setState(() {});
-      });
-    } catch (e) {
-      print('no se puedo inicializar la camara');
-      print(e);
-    }
+    // INICIAMOS CON CAMARA FRONTAL
+
+    this.cameraControl = _cameraTrasera;
+    inicializarCamara();
   }
 
   @override
   void dispose() {
     painterController.dispose();
     controllerNumber.dispose();
+    _cameraFrontal.dispose();
+    _cameraTrasera.dispose();
     super.dispose();
   }
 
@@ -109,13 +111,10 @@ class _HomePageState extends State<HomePage> {
                       child: Center(child: getImageCache()),
                     )
                   : Container(
-                      width: this.size.width * 0.6,
-                      color: Colors.grey[200],
                       margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: !cameraControllerTrasera.value.isInitialized
+                      child: !cameraControl.value.isInitialized
                           ? spinner()
-                          : Center(
-                              child: CameraPreview(cameraControllerTrasera)),
+                          : Center(child: CameraPreview(cameraControl)),
                     ),
             ),
           );
@@ -126,18 +125,19 @@ class _HomePageState extends State<HomePage> {
     if (this.mifoto == null) {
       return InkWell(
         onTap: () async {
+          this.cargando = true;
+          setState(() {});
           try {
-            print(this.cargando);
-            if (cameraControllerTrasera.value.isInitialized &&
-                this.mifoto == null) {
-              this.mifoto = await cameraControllerTrasera.takePicture();
+            if (cameraControl.value.isInitialized && this.mifoto == null) {
+              this.mifoto = await cameraControl.takePicture();
               setState(() {});
-              print('jamas llega aqui2');
             }
           } catch (e) {
             print('ERROR TOMANDO LA FOTO');
             print(e);
           }
+          this.cargando = false;
+          setState(() {});
         },
         child: Container(
           height: this.size.height * 0.075,
@@ -209,8 +209,6 @@ class _HomePageState extends State<HomePage> {
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Icon(Icons.camera_alt, color: Colors.white),
-                      // SizedBox(width: 10),
                       Text(
                         'Continuar',
                         style: TextStyle(
@@ -226,6 +224,7 @@ class _HomePageState extends State<HomePage> {
       onTap: () {
         this.painterController.clear();
         this.firma = false;
+        this.cargando = false;
         setState(() {});
       },
       child: Container(
@@ -306,57 +305,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void voltearCamara() {
+  void voltearCamara() async {
     this.mifoto = null;
     try {
-      if (cameraControllerTrasera.description.name == '0') {
-        // PONEMOS LA CAMARA FRONTA
-        CameraController _camera = CameraController(
-            cameras[1], ResolutionPreset.low,
-            enableAudio: false);
-        this.cameraControllerTrasera = _camera;
-        // _camera.dispose();
+      if (cameraControl.description.name == '0') {
+        this.cameraControl = _cameraFrontal;
       } else {
-        // PONEMOS LA CAMARA TRASERA
-        print('camera  TRASERA =  = = =  == = = = = =  ========0');
-        CameraController _camera = CameraController(
-          cameras[0],
-          ResolutionPreset.low,
-          enableAudio: false,
-        );
-        this.cameraControllerTrasera = _camera;
-        print('flash mode;..-.--.-.-.-.--.-.--.-.');
-        if (this.cameraControllerTrasera.value.flashMode != FlashMode.off) {
-          try {
-            print('PROBEMOS APAGAR EL FLASH');
-            print(this.cameraControllerTrasera.value.flashMode);
-            setFlashMode(FlashMode.off).then((_) {
-              if (mounted) setState(() {});
-            });
-          } catch (e) {
-            print('error');
-            print(e);
-          }
-        }
+        this.cameraControl = _cameraTrasera;
+        await setFlashMode(FlashMode.off);
       }
-
-      cameraControllerTrasera.initialize().then((_) {
-        if (!mounted) return;
-
-        setState(() {});
-      });
-
-      setState(() {});
+      inicializarCamara();
     } catch (e) {
       print('ERRORR AL CAMBIAR LA CAMARA?');
       print(e);
     }
   }
 
+  // try {
+  //   print('PROBEMOS APAGAR EL FLASH');
+  //   print(this.cameraControl.value.flashMode);
+  //   setFlashMode(FlashMode.off).then((_) {
+  //     if (mounted) setState(() {});
+  //   });
+  // } catch (e) {
+  //   print(e);
+  // }
+
   Future<void> setFlashMode(FlashMode mode) async {
-    if (this.cameraControllerTrasera == null) return;
+    if (this.cameraControl == null) return;
     try {
-      await this.cameraControllerTrasera.setFlashMode(mode);
+      await this.cameraControl.setFlashMode(mode);
     } on CameraException catch (e) {
       print('ERROR EN EL SET FLAS MODE:::');
       print(e);
@@ -391,6 +369,7 @@ class _HomePageState extends State<HomePage> {
     return InkWell(
       onTap: () {
         this.mifoto = null;
+        this.cargando = false;
         setState(() {});
       },
       child: Container(
@@ -487,35 +466,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // btnTomarFoto() {
-  //   return InkWell(
-  //     onTap: () async {
-  //       this.cargando = true;
-  //       setState(() {});
-  //       this.mifoto = await cameraControllerTrasera.takePicture();
-  //       this.cargando = false;
-  //       setState(() {});
-  //     },
-  //     child: Container(
-  //       padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-  //       decoration: BoxDecoration(
-  //         boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 0.5)],
-  //         gradient: LinearGradient(
-  //           begin: Alignment.topCenter,
-  //           end: Alignment.bottomCenter,
-  //           colors: [Colors.grey[100], Colors.grey[300]],
-  //         ),
-  //       ),
-  //       child: Row(
-  //         children: [
-  //           Icon(FontAwesomeIcons.check, color: Colors.green),
-  //           SizedBox(width: 5),
-  //           Text('Foto'),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-
   void resetPizarron() {
     try {
       if (!this.painterController.isFinished()) {
@@ -557,5 +507,12 @@ class _HomePageState extends State<HomePage> {
         }
       },
     );
+  }
+
+  void inicializarCamara() {
+    cameraControl.initialize().then((_) {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 }
