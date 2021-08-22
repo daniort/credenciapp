@@ -22,31 +22,31 @@ class AppState with ChangeNotifier {
     Permission.storage.request().isGranted;
   }
 
-  Future<bool> saveNewAlumno(
+  Future<ResModel> saveNewAlumno(
       String text, PictureDetails firmaDetalle, var mifoto) async {
     try {
       if (await pidePermiso(Permission.storage)) {
-        Directory dir = await crearDirectorio(text);
-        // GUARDAMOS LA FOTO
-        File fotoSave = File(dir.path + '/foto_$text.jpg');
-        await fotoSave.writeAsBytes(await mifoto.readAsBytes());
-        // GUARDAMOS LA FIRMA
-        Uint8List data = await firmaDetalle.toPNG();
-        File firmaSave = File(dir.path + '/firma_$text.png');
-        firmaSave.writeAsBytesSync(data.toList());
-
         List<String> numeros = this._db.getDataUser('numeros') ?? [];
-        numeros.add(text);
-        this._db.saveDataUser(numeros, 'numeros');
-      } else {
-        print(await pidePermiso(Permission.storage));
-        print('NO NOS DIERON PERMISO :(');
-      }
-      return true;
+        if (!numeros.contains(text)) {
+          numeros.add(text);
+          this._db.saveDataUser(numeros, 'numeros');
+          Directory dir = await crearDirectorio(text);
+          // GUARDAMOS LA FOTO
+          File fotoSave = File(dir.path + '/foto_$text.jpg');
+          await fotoSave.writeAsBytes(await mifoto.readAsBytes());
+          // GUARDAMOS LA FIRMA
+          Uint8List data = await firmaDetalle.toPNG();
+          File firmaSave = File(dir.path + '/firma_$text.png');
+          firmaSave.writeAsBytesSync(data.toList());
+          return ResModel(msn: 'Hecho', success: true);
+        } else
+          return ResModel(
+              msn: 'Número de control ya registrado', success: false);
+      } else
+        return ResModel(
+            msn: 'No tenemos los permisos para continuar', success: false);
     } catch (e) {
-      print('ERROR  EN SAVE NEW ALUMNO ');
-      print(e);
-      return false;
+      return ResModel(msn: e.toString(), success: false);
     }
   }
 
@@ -67,4 +67,14 @@ class AppState with ChangeNotifier {
   }
 
   List getAlumnos() => this._db.getDataUser('numeros') ?? [];
+}
+
+class ResModel {
+  ResModel({
+    this.msn,
+    this.success,
+  });
+
+  String msn;
+  bool success;
 }

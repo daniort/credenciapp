@@ -410,15 +410,16 @@ class _HomePageState extends State<HomePage> {
               if (keyForm.currentState.validate()) {
                 this.cargando = true;
                 setState(() {});
-                bool res = await this.state.saveNewAlumno(
+                ResModel res = await this.state.saveNewAlumno(
                     this.controllerNumber.text,
                     this.painterController.finish(),
                     this.mifoto);
                 this.cargando = false;
                 setState(() {});
-                if (res) {
+                if (res.success) {
                   this.mifoto = null;
                   resetPizarron();
+                  this.controllerNumber.clear();
                   this.keyForm.currentState.reset();
                   // snack('TODO GOOD', Colors.blue, keyScaff);
                   setState(() {});
@@ -426,11 +427,11 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HistorialPage(),
+                      builder: (_) => HistorialPage(),
                     ),
                   );
                 } else {
-                  snack('Algo salió mal', Colors.red, keyScaff);
+                  snack(res.msn, Colors.red, keyScaff);
                   Navigator.pop(context);
                 }
               }

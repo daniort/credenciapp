@@ -47,6 +47,13 @@ snack(String label, Color col, GlobalKey<ScaffoldState> key) {
     content: Text(label),
     backgroundColor: col,
     duration: Duration(seconds: 4),
+    action: SnackBarAction(
+      label: 'X',
+      textColor: Colors.white,
+      onPressed: () {
+        key.currentState.hideCurrentSnackBar();
+      },
+    ),
   ));
 }
 
