@@ -453,9 +453,9 @@ class _HomePageState extends State<HomePage> {
           controller: controllerNumber,
           autofocus: true,
           keyboardType: TextInputType.number,
-          maxLength: 8,
+          maxLength: 9,
           validator: (String val) {
-            if (val.length < 8 || val.length > 8) return 'Número inválido.';
+            if (val.length < 8 || val.length > 9) return 'Número inválido.';
             if (val.contains('.') ||
                 val.contains(',') ||
                 val.contains(' ') ||
