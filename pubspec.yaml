@@ -32,6 +32,7 @@ dependencies:
   path_provider: ^1.6.17
   permission_handler: ^5.1.0
   font_awesome_flutter: ^8.8.1
+  # pinch_zoom_image_last: ^0.3.2
   provider: ^4.3.3
 
 

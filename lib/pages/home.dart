@@ -410,15 +410,16 @@ class _HomePageState extends State<HomePage> {
               if (keyForm.currentState.validate()) {
                 this.cargando = true;
                 setState(() {});
-                bool res = await this.state.saveNewAlumno(
+                ResModel res = await this.state.saveNewAlumno(
                     this.controllerNumber.text,
                     this.painterController.finish(),
                     this.mifoto);
                 this.cargando = false;
                 setState(() {});
-                if (res) {
+                if (res.success) {
                   this.mifoto = null;
                   resetPizarron();
+                  this.controllerNumber.clear();
                   this.keyForm.currentState.reset();
                   // snack('TODO GOOD', Colors.blue, keyScaff);
                   setState(() {});
@@ -426,11 +427,11 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HistorialPage(),
+                      builder: (_) => HistorialPage(),
                     ),
                   );
                 } else {
-                  snack('Algo salió mal', Colors.red, keyScaff);
+                  snack(res.msn, Colors.red, keyScaff);
                   Navigator.pop(context);
                 }
               }
@@ -452,9 +453,9 @@ class _HomePageState extends State<HomePage> {
           controller: controllerNumber,
           autofocus: true,
           keyboardType: TextInputType.number,
-          maxLength: 8,
+          maxLength: 9,
           validator: (String val) {
-            if (val.length < 8 || val.length > 8) return 'Número inválido.';
+            if (val.length < 8 || val.length > 9) return 'Número inválido.';
             if (val.contains('.') ||
                 val.contains(',') ||
                 val.contains(' ') ||

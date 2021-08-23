@@ -6,6 +6,7 @@ import 'package:hive/hive.dart';
 import 'package:hive_listener/hive_listener.dart';
 import 'package:logs/data/search.dart';
 import 'package:logs/data/widgets.dart';
+import 'package:logs/pages/item.dart';
 import 'package:logs/providers/appstate.dart';
 import 'package:provider/provider.dart';
 
@@ -72,7 +73,76 @@ class _HistorialPageState extends State<HistorialPage> {
                               children: [
                                 InkWell(
                                   onTap: () {
-                                    this.state.deleteAlumno(numeros[i]);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            ItemPage(numero: numeros[i]),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.symmetric(vertical: 5),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 10),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.remove_red_eye,
+                                            color: Colors.grey),
+                                        SizedBox(width: 5),
+                                        Text(
+                                          'Ver',
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: () {
+                                    return showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          // dialogDelete(context, numeros[i]),
+
+                                          AlertDialog(
+                                              title: Center(
+                                                  child: Text(
+                                                      'Eliminar Registro')),
+                                              actions: <Widget>[
+                                                MaterialButton(
+                                                  onPressed: () =>
+                                                      Navigator.of(context)
+                                                          .pop(),
+                                                  child: Text(
+                                                    'Cancelar',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Colors.grey[800]),
+                                                  ),
+                                                ),
+                                                MaterialButton(
+                                                  onPressed: () {
+                                                    Provider.of<AppState>(
+                                                            context,
+                                                            listen: false)
+                                                        .deleteAlumno(
+                                                            numeros[i]);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  color: Colors.blue,
+                                                  child: Text(
+                                                    'Eliminar',
+                                                    style: TextStyle(
+                                                        color: Colors.white),
+                                                  ),
+                                                ),
+                                              ],
+                                              content: Text(
+                                                  '¿Estás seguro de eliminar este registro?')),
+                                    );
                                   },
                                   child: Container(
                                     margin: EdgeInsets.symmetric(vertical: 5),

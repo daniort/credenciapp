@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:logs/providers/appstate.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 Future<Directory> crearDirectorio(String text) async {
   Directory dir = await getExternalStorageDirectory();
@@ -47,6 +49,13 @@ snack(String label, Color col, GlobalKey<ScaffoldState> key) {
     content: Text(label),
     backgroundColor: col,
     duration: Duration(seconds: 4),
+    action: SnackBarAction(
+      label: 'X',
+      textColor: Colors.white,
+      onPressed: () {
+        key.currentState.hideCurrentSnackBar();
+      },
+    ),
   ));
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:logs/pages/item.dart';
 import 'package:logs/providers/appstate.dart';
 import 'package:provider/provider.dart';
 
@@ -57,10 +58,15 @@ class ArticleSearch extends SearchDelegate<String> {
                     title: Text(x, overflow: TextOverflow.fade, maxLines: 1),
                     trailing: IconButton(
                         onPressed: () {
-                          _state.deleteAlumno(x);
                           close(context, 'null');
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ItemPage(numero: x),
+                            ),
+                          );
                         },
-                        icon: Icon(Icons.delete, color: Colors.red[300])),
+                        icon: Icon(Icons.remove_red_eye, color: Colors.grey)),
                   ),
                 ),
           ],
