@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
     this.painterController.backgroundColor = Colors.transparent;
     // INICIAMOS CON CAMARA FRONTAL
 
-    this.cameraControl = _cameraTrasera;
+    this.cameraControl = _cameraFrontal;
     inicializarCamara();
   }
 
